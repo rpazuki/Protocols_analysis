@@ -1,0 +1,79 @@
+# Production stack for the Imperial-hosted Red Hat VM.
+#
+#   docker compose -f docker-compose.yml --env-file /etc/protocols/app.env up -d
+#
+# Notes for the VM admin:
+#  * Secrets live in /etc/protocols/app.env, owned by root, mode 0600. Nothing
+#    secret belongs in this file or in the image.
+#  * The app binds to loopback only. TLS is terminated by the VM's reverse
+#    proxy (Apache/nginx), which also hosts the Shibboleth SP if that is the
+#    approved auth route.
+#  * PostgreSQL is not published to the network at all; only the app container
+#    reaches it over the compose network.
+#  * Run migrations explicitly on deploy, never automatically on boot:
+#      docker compose run --rm --entrypoint node app scripts/db/migrate.ts
+
+name: protocols
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:?set POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:?set POSTGRES_DB}
+      POSTGRES_INITDB_ARGS: "--locale=C --encoding=UTF8"
+    volumes:
+      - /srv/protocols/pgdata:/var/lib/postgresql/data
+      - /srv/protocols/backups:/backups
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+    # No `ports:` on purpose - the database is reachable only inside this stack.
+
+  app:
+    image: ${APP_IMAGE:-protocols-analysis:latest}
+    build:
+      context: ../../..
+      dockerfile: infra/docker/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      APP_URL: ${APP_URL:?set APP_URL}
+      APP_VERSION: ${APP_VERSION:-0.1.0}
+      ENVIRONMENT_LABEL: ""
+      APP_TIMEZONE: ${APP_TIMEZONE:-Europe/London}
+      SESSION_SECRET: ${SESSION_SECRET:?set SESSION_SECRET}
+      SESSION_TTL_HOURS: ${SESSION_TTL_HOURS:-12}
+      DATABASE_URL: ${DATABASE_URL:?set DATABASE_URL}
+      AUTH_ADAPTER: ${AUTH_ADAPTER:?set AUTH_ADAPTER}
+      ALLOWED_EMAIL_DOMAINS: ${ALLOWED_EMAIL_DOMAINS:-}
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-}
+      ADMIN_BOOTSTRAP_EMAILS: ${ADMIN_BOOTSTRAP_EMAILS:?set ADMIN_BOOTSTRAP_EMAILS}
+      ACCESS_DENYLIST_EMAILS: ${ACCESS_DENYLIST_EMAILS:-}
+      ALLOW_RESEARCHER_RESTORE: ${ALLOW_RESEARCHER_RESTORE:-true}
+      ALLOW_RESEARCHER_PERMANENT_DELETE: ${ALLOW_RESEARCHER_PERMANENT_DELETE:-true}
+      PERMANENT_DELETE_WAIT_DAYS: ${PERMANENT_DELETE_WAIT_DAYS:-0}
+      EXPORT_MAX_ROWS: ${EXPORT_MAX_ROWS:-100000}
+      ENTRA_ISSUER: ${ENTRA_ISSUER:-}
+      ENTRA_CLIENT_ID: ${ENTRA_CLIENT_ID:-}
+      ENTRA_CLIENT_SECRET: ${ENTRA_CLIENT_SECRET:-}
+      ENTRA_REDIRECT_URI: ${ENTRA_REDIRECT_URI:-}
+      ENTRA_EMAIL_CLAIM: ${ENTRA_EMAIL_CLAIM:-email}
+      SHIBBOLETH_PROXY_SECRET: ${SHIBBOLETH_PROXY_SECRET:-}
+      SHIBBOLETH_EMAIL_HEADER: ${SHIBBOLETH_EMAIL_HEADER:-mail}
+      SHIBBOLETH_IDP_ENTITY_ID: ${SHIBBOLETH_IDP_ENTITY_ID:-https://shibboleth.imperial.ac.uk/shibboleth}
+    ports:
+      # Loopback only. The reverse proxy in front terminates TLS.
+      - "127.0.0.1:3000:3000"
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"

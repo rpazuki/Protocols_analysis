@@ -1,0 +1,50 @@
+# Secrets. `.env` holds secrets and behaviour only — never addresses (ADR-0012).
+.env
+.env.local
+*.pem
+*.key
+# A runtime credential file is exactly what the predecessor's incident was about.
+# Matched by shape, not by the one name that caused it: the next one will be called
+# something else.
+adminPass
+*Pass
+*password*
+*credentials*
+*.p12
+*.pfx
+id_rsa*
+secrets/
+
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+*.egg-info/
+dist/
+build/
+
+# Node
+node_modules/
+.next/
+out/
+*.tsbuildinfo
+
+# Local state: object store, model weights, scratch databases
+# `var/*` rather than `var/`: git does not descend into an ignored directory, so a
+# negation inside one never takes effect and the placeholder stays untracked.
+var/*
+!var/.gitkeep
+model-cache/
+
+# Evaluation and benchmark outputs
+benchmarks/reports/
+evaluation/reports/
+
+# Editors and OS
+.DS_Store
+.idea/
+.vscode/
+.github/

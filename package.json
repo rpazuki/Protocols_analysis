@@ -1,0 +1,41 @@
+{
+  "name": "protocols-analysis",
+  "private": true,
+  "type": "module",
+  "version": "0.1.0",
+  "description": "Lab Protocols Analysis - internal one-lab app for recording daily protocol variations and outcomes.",
+  "workspaces": [
+    "packages/domain",
+    "packages/db",
+    "packages/auth-adapters/core",
+    "packages/auth-adapters/mock",
+    "packages/auth-adapters/entra-oidc",
+    "packages/auth-adapters/shibboleth-saml",
+    "apps/web",
+    "apps/mock-api"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "npm run build --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "dev": "npm run dev --workspace apps/web",
+    "dev:mock-api": "npm run dev --workspace apps/mock-api",
+    "test": "node --test --experimental-strip-types \"tests/unit/**/*.test.ts\"",
+    "test:integration": "node --test --test-concurrency=1 --experimental-strip-types \"tests/integration/**/*.test.ts\"",
+    "test:security": "node --test --test-concurrency=1 --experimental-strip-types \"tests/security/**/*.test.ts\"",
+    "test:all": "npm run test && npm run test:integration && npm run test:security",
+    "db:migrate": "node --experimental-strip-types scripts/db/migrate.ts",
+    "db:seed": "node --experimental-strip-types scripts/db/seed.ts",
+    "admin:list": "node --experimental-strip-types scripts/admin/admin-cli.ts list",
+    "export:cli": "node --experimental-strip-types scripts/export/export-cli.ts",
+    "test:integration:required": "REQUIRE_TEST_DATABASE=true npm run test:integration",
+    "test:security:required": "REQUIRE_TEST_DATABASE=true npm run test:security",
+    "test:ci": "npm run typecheck && npm run test && npm run test:integration:required && npm run test:security:required"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "typescript": "^5.7.2"
+  }
+}

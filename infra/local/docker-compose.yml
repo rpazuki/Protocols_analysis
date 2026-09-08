@@ -1,0 +1,80 @@
+# Local development stack.
+#
+# Run from the repository root:
+#   docker compose -f infra/local/docker-compose.yml up -d
+#   npm run db:migrate && npm run db:seed
+#   npm run dev
+#
+# Only PostgreSQL runs in Docker by default; the web app runs on the host with
+# hot reload. Use the "app" profile to run the containerised app instead:
+#   docker compose -f infra/local/docker-compose.yml --profile app up --build
+
+name: protocols-local
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: protocols
+      POSTGRES_PASSWORD: protocols
+      POSTGRES_DB: protocols
+      # Deterministic collation, so ORDER BY matches production.
+      POSTGRES_INITDB_ARGS: "--locale=C --encoding=UTF8"
+      # A second database for the integration and security suites, so running
+      # them never truncates the database you have been developing against.
+      # Create it once with:
+      #   docker compose -f infra/local/docker-compose.yml exec db \
+      #     psql -U protocols -c 'CREATE DATABASE protocols_test'
+    ports:
+      # Bound to loopback: the development database must not be reachable from the network.
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U protocols -d protocols"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  # Optional containerised app, for checking the production image locally.
+  app:
+    profiles: ["app"]
+    build:
+      context: ../..
+      dockerfile: infra/docker/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      NODE_ENV: development
+      APP_URL: http://localhost:3000
+      ENVIRONMENT_LABEL: LOCAL DOCKER
+      SESSION_SECRET: development-only-insecure-session-secret-change-me
+      DATABASE_URL: postgres://protocols:protocols@db:5432/protocols
+      AUTH_ADAPTER: mock
+      ADMIN_BOOTSTRAP_EMAILS: mock.admin@ic.ac.uk
+    ports:
+      - "127.0.0.1:3000:3000"
+
+  # Development-only mock API for building clients before ICT SSO approval.
+  mock-api:
+    profiles: ["mock-api"]
+    image: node:24-bookworm-slim
+    working_dir: /app
+    command: ["node", "apps/mock-api/src/server.ts"]
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      NODE_ENV: development
+      MOCK_API_PORT: "4000"
+      DATABASE_URL: postgres://protocols:protocols@db:5432/protocols
+    volumes:
+      - ../..:/app
+    ports:
+      - "127.0.0.1:4000:4000"
+
+volumes:
+  db-data:
