@@ -37,8 +37,10 @@ export default async function SignInPage({
         <div>
           <h1>{config.appName}</h1>
           <p className="lede">
-            Record daily protocol variations and outcomes. Sign in with your Imperial account to
-            continue.
+            Record daily protocol variations and outcomes.{' '}
+            {config.adapterId === 'local'
+              ? 'Sign in with your local email and password to continue.'
+              : 'Sign in with your Imperial account to continue.'}
           </p>
         </div>
       </div>

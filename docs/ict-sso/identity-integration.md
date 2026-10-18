@@ -88,3 +88,11 @@ Authentication proves identity; authorization stayed app-owned, as planned.
 - Every mutation is a server action that re-derives the principal from the session and re-checks authorization against the freshly loaded row.
 - Admin changes and denied admin access attempts are audited.
 - `ALLOWED_EMAIL_DOMAINS` optionally refuses a successfully authenticated user from outside the approved domains, so a mis-scoped app registration cannot open the lab record to a wider tenant.
+
+## Optional local login while SSO is pending
+
+`AUTH_ADAPTER=local` is a separate production-capable email/password adapter.
+It uses administrator-provisioned accounts rather than asserting an arbitrary
+identity. SSO-specific instructions above apply to the SSO adapters; mock auth
+remains development-only. See [local authentication](../admin-ops/local-authentication.md)
+for migration, account lifecycle, data stored and switching to SSO.

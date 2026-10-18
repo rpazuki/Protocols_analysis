@@ -59,6 +59,18 @@ describe('security: mock auth cannot run in production', () => {
     assert.match(result.stderr, /mock is not allowed with NODE_ENV=production/);
   });
 
+  test('accepts local password login in production without SSO secrets', () => {
+    const result = loadConfigWith({ ...productionBase, AUTH_ADAPTER: 'local',
+      ENTRA_CLIENT_SECRET: '', SHIBBOLETH_PROXY_SECRET: '' });
+    assert.equal(result.ok, true, result.stderr);
+  });
+
+  test('refuses an unknown production adapter', () => {
+    const result = loadConfigWith({ ...productionBase, AUTH_ADAPTER: 'unknown' });
+    assert.equal(result.ok, false);
+    assert.match(result.stderr, /Unknown AUTH_ADAPTER/);
+  });
+
   test('refuses a short session secret', () => {
     const result = loadConfigWith({
       ...productionBase,

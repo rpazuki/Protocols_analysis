@@ -73,7 +73,7 @@ Please confirm:
 5. Whether a staging/test SSO registration is required.
 6. Whether the SSO request should be handled together with, or separately from, the TLS certificate request for this hostname.
 
-Privacy/data note: Protocols stores the authenticated Imperial email address as the user's app username and attaches it to protocol reports, audit events, and admin exports. It stores no passwords and no extra user profile data. A first-access privacy/use agreement tells users that their Imperial email address is stored.
+Privacy/data note: Protocols stores the authenticated Imperial email address as the user's app username and attaches it to protocol reports, audit events, and admin exports. In SSO mode it requires no local password and stores no extra SSO profile data. An optional separately configured local-login mode stores salted password hashes and login-security state; it does not collect Imperial SSO credentials. A first-access privacy/use agreement tells users that their Imperial email address is stored.
 
 ## Gateway And Application Details
 

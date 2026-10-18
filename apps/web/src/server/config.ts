@@ -155,8 +155,11 @@ export function assertProductionConfig(): void {
   // refuse to start if mock auth is selected."
   if (config.adapterId === 'mock') {
     throw new Error(
-      'AUTH_ADAPTER=mock is not allowed with NODE_ENV=production. Configure entra-oidc or shibboleth-saml.',
+      'AUTH_ADAPTER=mock is not allowed with NODE_ENV=production. Configure local, entra-oidc or shibboleth-saml.',
     );
+  }
+  if (!['local', 'entra-oidc', 'shibboleth-saml'].includes(config.adapterId)) {
+    throw new Error('Unknown AUTH_ADAPTER in production.');
   }
   if (config.sessionSecret.length < 32) {
     throw new Error('SESSION_SECRET must be at least 32 characters in production.');

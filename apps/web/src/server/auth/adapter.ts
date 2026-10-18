@@ -1,4 +1,5 @@
 import 'server-only';
+import { LocalAuthAdapter } from './local.ts';
 import type { AuthAdapter } from '@protocols/auth-core';
 import { MockAuthAdapter } from '@protocols/auth-mock';
 import { EntraOidcAdapter } from '@protocols/auth-entra-oidc';
@@ -16,6 +17,10 @@ export function getAuthAdapter(): AuthAdapter {
   if (cached) return cached;
 
   switch (config.adapterId) {
+    case 'local': {
+      cached = new LocalAuthAdapter(config.allowedEmailDomains);
+      break;
+    }
     case 'mock': {
       if (isProduction) {
         throw new Error('Mock auth cannot be used in production.');

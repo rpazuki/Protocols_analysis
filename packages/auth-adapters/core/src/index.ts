@@ -1,6 +1,6 @@
 import { normalizeEmail } from '@protocols/domain';
 
-export const AUTH_ADAPTER_IDS = ['mock', 'entra-oidc', 'shibboleth-saml'] as const;
+export const AUTH_ADAPTER_IDS = ['mock', 'local', 'entra-oidc', 'shibboleth-saml'] as const;
 export type AuthAdapterId = (typeof AUTH_ADAPTER_IDS)[number];
 
 /**
@@ -11,6 +11,8 @@ export type AuthAdapterId = (typeof AUTH_ADAPTER_IDS)[number];
 export interface AuthClaims {
   /** Normalized (lowercased, trimmed) authenticated email address. This is the app username. */
   email: string;
+  /** Local credential revision, used to invalidate sessions after password resets. */
+  credentialVersion?: number;
   /** Stable provider subject identifier, for session binding and audit only. */
   subject: string;
   /** Issuer / IdP entityID, for audit. */

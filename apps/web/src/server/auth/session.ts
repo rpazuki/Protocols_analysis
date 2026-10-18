@@ -3,6 +3,7 @@ import { cookies } from 'next/headers';
 import { SignJWT, jwtVerify } from 'jose';
 import type { AuthClaims } from '@protocols/auth-core';
 import { normalizeEmail } from '@protocols/domain';
+import { localAuthRepo } from '@protocols/db';
 import { config, isProduction } from '../config.ts';
 import { appBasePath } from '../../lib/paths.ts';
 
@@ -44,6 +45,7 @@ export async function createSession(claims: AuthClaims): Promise<void> {
     email: normalizeEmail(claims.email),
     subject: claims.subject,
     issuer: claims.issuer,
+    credentialVersion: claims.credentialVersion,
     isMock: claims.issuer === 'mock-auth-adapter',
     displayLabel: claims.displayLabel ?? null,
     logoutHint: claims.logoutHint ?? null,
@@ -75,6 +77,13 @@ export async function readSession(): Promise<SessionPayload | null> {
     // honoured by a production container, even if the cookie secret leaked
     // across environments.
     if (isMock && isProduction) return null;
+    if (payload.issuer === 'local-password') {
+      if (config.adapterId !== 'local' || !Number.isSafeInteger(payload.credentialVersion)) return null;
+      if (!await localAuthRepo.isSessionCurrent(email, Number(payload.credentialVersion))) return null;
+    } else if (config.adapterId === 'local') {
+      // Switching to local login must not accept an old SSO/mock cookie.
+      return null;
+    }
 
     return {
       email,

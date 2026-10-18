@@ -8,3 +8,4 @@ export * as denylistRepo from './repositories/denylist.ts';
 export * as agreementsRepo from './repositories/agreements.ts';
 export * as auditRepo from './repositories/audit.ts';
 export * from './migrate.ts';
+export * as localAuthRepo from './local-auth.ts';

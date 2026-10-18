@@ -38,7 +38,7 @@ export function SiteHeader({ principal, appName }: { principal: Principal | null
             <div className="identity">
               {principal.isMock ? <span className="badge badge--mock">Mock user</span> : null}
               {principal.role === 'admin' ? <span className="badge badge--admin">Admin</span> : null}
-              <span className="identity__email" title="Signed in from your Imperial account">
+              <span className="identity__email" title="Signed-in account">
                 {principal.email}
               </span>
               <form action={appPath('/auth/signout')} method="post">

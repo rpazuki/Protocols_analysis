@@ -71,7 +71,7 @@ export async function truncateAll(): Promise<void> {
   if (!testDatabaseUrl) return;
   await getPool().query(`
     TRUNCATE protocol_reports, report_tombstones, protocol_types,
-             admin_allowlist, researcher_denylist, user_agreement_acceptances, audit_events
+             admin_allowlist, researcher_denylist, user_agreement_acceptances, audit_events, local_accounts
     RESTART IDENTITY CASCADE
   `);
 }

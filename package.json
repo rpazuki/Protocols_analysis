@@ -32,7 +32,9 @@
     "export:cli": "node --experimental-strip-types scripts/export/export-cli.ts",
     "test:integration:required": "REQUIRE_TEST_DATABASE=true npm run test:integration",
     "test:security:required": "REQUIRE_TEST_DATABASE=true npm run test:security",
-    "test:ci": "npm run typecheck && npm run test && npm run test:integration:required && npm run test:security:required"
+    "test:ci": "npm run typecheck && npm run test && npm run test:integration:required && npm run test:security:required",
+    "local-users": "node --experimental-strip-types scripts/admin/local-users.ts",
+    "test:local-production": "NEXT_PHASE=phase-production-build npm run build --workspace apps/web && REQUIRE_TEST_DATABASE=true node --test --experimental-strip-types tests/e2e/local-production.test.ts"
   },
   "devDependencies": {
     "@types/node": "^22.10.2",

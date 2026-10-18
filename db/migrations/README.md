@@ -19,3 +19,4 @@ Rules:
 | `0002_app_role.sql` | the least-privilege `protocols_app` role and its grants |
 | `0003_researcher_denylist.sql` | the researcher access denylist and its grant |
 | `0004_denylist_from_config.sql` | explicit `from_config` marker, so a block dropped from config can be managed in the app |
+| `0005_local_accounts.sql` | optional salted password accounts, lockout state and session credential revisions; owner-only provisioning |

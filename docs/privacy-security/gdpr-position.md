@@ -108,3 +108,14 @@ These are decisions, not code, and none of them is silently pre-empted by the im
 3. **Privacy notice wording and sign-off** by the lab PI, department, ICT, and the Imperial data protection contact.
 4. **Backup and restore procedure**, covering the database and the admin allowlist together.
 5. **A decision on pseudonymisation** if exports are ever shared outside the lab or used for publication.
+
+## Optional local authentication
+
+When `AUTH_ADAPTER=local`, `local_accounts` additionally stores normalized email,
+a salted scrypt password hash, credential revision, active status, failed-login
+count, lockout time, and account/login timestamps. Plaintext passwords are not
+stored or audited. Only VM operators with the owner database credential can
+provision/reset accounts; the runtime database role can read hashes and update
+login counters, but cannot replace passwords. Include this table in protected
+database backups and privacy/retention review. SSO-only deployments need no
+local accounts.

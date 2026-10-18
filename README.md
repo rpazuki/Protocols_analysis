@@ -135,3 +135,11 @@ Still outstanding, and not code decisions:
 4. Backup and restore procedure for the database and the admin allowlist together.
 
 The app-level choices those decisions interact with are configurable rather than hard-coded: see `ALLOW_RESEARCHER_RESTORE`, `ALLOW_RESEARCHER_PERMANENT_DELETE`, and `PERMANENT_DELETE_WAIT_DAYS` in [.env.example](.env.example).
+
+## Production without SSO
+
+Set `AUTH_ADAPTER=local` for email/password login with provisioned accounts.
+Production HTTPS/session-secret requirements still apply; `mock` remains blocked.
+See [local account operations and deployment](docs/admin-ops/local-authentication.md).
+The production Compose host port is configurable with `APP_HOST_PORT` (default
+3200) so this app can share a machine with BioPipeline2.

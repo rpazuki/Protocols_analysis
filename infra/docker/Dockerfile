@@ -58,6 +58,9 @@ ENV HOSTNAME=0.0.0.0
 # (including pg) in /app/node_modules.
 COPY --from=build --chown=node:node /app/apps/web/.next/standalone ./
 COPY --from=build --chown=node:node /app/apps/web/.next/static ./apps/web/.next/static
+# Next inlines zod into the web bundle, but operational TypeScript scripts
+# import the domain package directly and still need its runtime dependency.
+COPY --from=deps --chown=node:node /app/node_modules/zod ./node_modules/zod
 
 # Migrations, seeds, and the operational scripts travel with the image so a VM
 # admin can run them with `docker compose run --rm app node scripts/...`
@@ -82,6 +85,6 @@ USER node
 EXPOSE 3000
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
-  CMD node -e "fetch('http://127.0.0.1:3000/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+  CMD node -e "fetch('http://127.0.0.1:3000/protocols/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
 
 CMD ["node", "apps/web/server.js"]

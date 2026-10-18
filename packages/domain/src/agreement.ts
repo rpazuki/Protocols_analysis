@@ -10,7 +10,7 @@
  * Bump AGREEMENT_VERSION whenever the wording changes materially. Users are
  * re-prompted for any version they have not accepted.
  */
-export const AGREEMENT_VERSION = '2026-08-30.1';
+export const AGREEMENT_VERSION = '2026-10-18.1';
 
 export interface AgreementSection {
   heading: string;
@@ -26,8 +26,8 @@ export const AGREEMENT_SECTIONS: AgreementSection[] = [
   {
     heading: 'What this app stores about you',
     points: [
-      'Your authenticated Imperial email address is stored and used as your username in this app.',
-      'The app stores no password and no other profile details about you.',
+      'Your authenticated email address is stored and used as your username in this app.',
+      'In local email/password mode, the app stores a salted password hash, account status, and login security counters and timestamps. It never stores your plaintext password. SSO-only accounts need no local password.',
       'Your email address is attached to the protocol reports you create, to audit events for sensitive actions, to admin changes you make, and to data exports where relevant.',
     ],
   },

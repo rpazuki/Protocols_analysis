@@ -71,7 +71,7 @@ services:
       SHIBBOLETH_IDP_ENTITY_ID: ${SHIBBOLETH_IDP_ENTITY_ID:-https://shibboleth.imperial.ac.uk/shibboleth}
     ports:
       # Loopback only. The reverse proxy in front terminates TLS.
-      - "127.0.0.1:3000:3000"
+      - "127.0.0.1:${APP_HOST_PORT:-3200}:3000"
     logging:
       driver: json-file
       options:

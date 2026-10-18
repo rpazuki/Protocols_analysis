@@ -140,7 +140,7 @@ Export records should include a schema version and clear field names. The export
 
 ## Privacy And Security Principles
 
-- Store no passwords and no user profile fields beyond the normalized Imperial email address required for attribution and access control.
+- SSO accounts store no local passwords. The optional local-login mode stores salted password hashes and minimal login-security state, alongside the normalized email used for attribution and access control; see [local authentication](../admin-ops/local-authentication.md).
 - Treat the stored Imperial email address as personal data.
 - Keep auth claims processing in one server-side module.
 - Make the email/username visible but non-editable in the UI.

@@ -24,6 +24,9 @@ export const AUDIT_ACTIONS = [
   'export.run',
   'auth.login',
   'auth.denied',
+  'local-account.create',
+  'local-account.reset',
+  'local-account.disable',
 ] as const;
 
 export type AuditAction = (typeof AUDIT_ACTIONS)[number];
@@ -36,6 +39,7 @@ export const AUDIT_TARGET_TYPES = [
   'user_agreement',
   'export',
   'session',
+  'local_account',
 ] as const;
 
 export type AuditTargetType = (typeof AUDIT_TARGET_TYPES)[number];

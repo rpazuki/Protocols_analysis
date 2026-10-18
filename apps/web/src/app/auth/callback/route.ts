@@ -14,6 +14,8 @@ import { appUrl } from '../../../server/urls.ts';
 
 async function handle(request: NextRequest, body?: Record<string, string>): Promise<NextResponse> {
   const adapter = getAuthAdapter();
+  // Local credentials are accepted only by the same-origin server action.
+  if (adapter.id === 'local') return new NextResponse(null, { status: 404 });
   const transaction = await takeAuthTransaction();
 
   try {
