@@ -42,8 +42,14 @@ const isDev = process.env.NODE_ENV !== 'production';
 const scriptSrc = isDev ? "script-src 'self' 'unsafe-inline' 'unsafe-eval'" : "script-src 'self' 'unsafe-inline'";
 const basePath = (process.env.NEXT_PUBLIC_BASE_PATH || process.env.APP_BASE_PATH || '/protocols').replace(/\/$/, '') || '/';
 
+// Both resolution and standalone tracing must include hoisted dependencies and
+// sibling packages, regardless of lockfile-based root detection on the VM.
+const workspaceRoot = path.resolve(__dirname, '../..');
+
 const config: NextConfig = {
   basePath,
+  turbopack: { root: workspaceRoot },
+  outputFileTracingRoot: workspaceRoot,
   // Emits a self-contained server bundle so the production image on the
   // Imperial VM does not need node_modules or a package manager.
   output: 'standalone',

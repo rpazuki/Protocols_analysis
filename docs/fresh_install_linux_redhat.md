@@ -229,8 +229,16 @@ admin list; creating a local account by itself does not grant admin rights.
 
 ## 6. Build the production frontend
 
+The checked-in `apps/web/next.config.ts` explicitly sets both `turbopack.root`
+and `outputFileTracingRoot` to the repository root (two directories above the
+config). This lets Next find dependencies hoisted into the root `node_modules`.
+Use the corrected Git revision; do not install Next globally to work around a
+workspace-root error.
+
 ```bash
 cd /opt/protocols-analysis
+sudo -u protocols npm ci
+sudo -u protocols node -p "require.resolve('next/package.json', { paths: [process.cwd() + '/apps/web'] })"
 sudo -u protocols env NODE_ENV=production NEXT_PHASE=phase-production-build \
     NEXT_TELEMETRY_DISABLED=1 APP_BASE_PATH=/protocols NEXT_PUBLIC_BASE_PATH=/protocols \
     npm run build --workspace apps/web
@@ -247,6 +255,23 @@ This is a monorepo: use the `apps/web/server.js` path inside the standalone
 bundle, not BioPipeline's frontend path. `public` is optional; `.next/static`
 must be copied. Runtime auth checks are deferred only during the build; do not
 set `NEXT_PHASE` in the permanent service environment.
+
+### If Turbopack cannot find `next/package.json`
+
+If the error says the filesystem root is `/opt/protocols-analysis/apps/web`,
+check the configuration contains these entries inside `const config: NextConfig`:
+
+```typescript
+turbopack: { root: path.resolve(__dirname, '../..') },
+outputFileTracingRoot: path.resolve(__dirname, '../..'),
+```
+
+`path` is already imported by the file. The checked-in version uses an equivalent
+`workspaceRoot` constant. Do not duplicate the entries. Then rerun section 6,
+starting with `npm ci` from `/opt/protocols-analysis`, not `apps/web`. If the
+`require.resolve` command fails, dependency installation is incomplete; resolve
+that failure before building. Avoid simultaneous installs/builds in one checkout.
+If updating a running service, stop it before rebuilding its standalone output.
 
 ## 7. Install and start the service
 
