@@ -6,7 +6,7 @@ Use the production compose file with a staging env file:
 
 ```bash
 docker compose -f infra/environments/production/docker-compose.yml \
-  --env-file /etc/protocols/staging.env up -d
+  --env-file /etc/protocols-analysis/staging.env up -d
 ```
 
 Settings that must differ from production:

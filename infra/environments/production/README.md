@@ -20,13 +20,13 @@ sign-in remains forbidden in production.
 
 ## Deploy
 
-Secrets live in `/etc/protocols/app.env`, owned by root, mode 0600. Nothing secret belongs in the compose file or the image.
+Secrets live in `/etc/protocols-analysis/app.env`, owned by root, mode 0600. Nothing secret belongs in the compose file or the image.
 
 ```bash
 cd /srv/protocols/app
 protocols_compose() {
     docker compose -f infra/environments/production/docker-compose.yml \
-        --env-file /etc/protocols/app.env "$@"
+        --env-file /etc/protocols-analysis/app.env "$@"
 }
 protocols_compose build app
 protocols_compose up -d db

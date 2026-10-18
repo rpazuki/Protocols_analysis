@@ -8,7 +8,7 @@ currently VM-operator commands, not an in-app user management screen.
 
 ## Production settings
 
-Use a separate deployment environment file, such as `/etc/protocols/app.env`,
+Use a separate deployment environment file, such as `/etc/protocols-analysis/app.env`,
 readable only by the operator. Example non-secret settings for the same VM as
 BioPipeline2:
 
@@ -70,7 +70,7 @@ the right Compose file and environment file, regardless of the current directory
 ```bash
 protocols_compose() {
     docker compose -f infra/environments/production/docker-compose.yml \
-        --env-file /etc/protocols/app.env "$@"
+        --env-file /etc/protocols-analysis/app.env "$@"
 }
 protocols_compose build app
 protocols_compose up -d db

@@ -1,9 +1,9 @@
 # Production stack for the Imperial-hosted Red Hat VM.
 #
-#   docker compose -f docker-compose.yml --env-file /etc/protocols/app.env up -d
+#   docker compose -f docker-compose.yml --env-file /etc/protocols-analysis/app.env up -d
 #
 # Notes for the VM admin:
-#  * Secrets live in /etc/protocols/app.env, owned by root, mode 0600. Nothing
+#  * Secrets live in /etc/protocols-analysis/app.env, owned by root, mode 0600. Nothing
 #    secret belongs in this file or in the image.
 #  * The app binds to loopback only. TLS is terminated by the VM's reverse
 #    proxy (Apache/nginx), which also hosts the Shibboleth SP if that is the

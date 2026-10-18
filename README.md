@@ -103,9 +103,9 @@ That runs typecheck, unit tests, and both database-backed suites with the databa
 Build and run on the VM:
 
 ```bash
-docker compose -f infra/environments/production/docker-compose.yml --env-file /etc/protocols/app.env build
-docker compose -f infra/environments/production/docker-compose.yml --env-file /etc/protocols/app.env up -d
-docker compose -f infra/environments/production/docker-compose.yml --env-file /etc/protocols/app.env \
+docker compose -f infra/environments/production/docker-compose.yml --env-file /etc/protocols-analysis/app.env build
+docker compose -f infra/environments/production/docker-compose.yml --env-file /etc/protocols-analysis/app.env up -d
+docker compose -f infra/environments/production/docker-compose.yml --env-file /etc/protocols-analysis/app.env \
   run --rm --entrypoint node app scripts/db/migrate.ts
 ```
 
@@ -143,3 +143,6 @@ Production HTTPS/session-secret requirements still apply; `mock` remains blocked
 See [local account operations and deployment](docs/admin-ops/local-authentication.md).
 The production Compose host port is configurable with `APP_HOST_PORT` (default
 3200) so this app can share a machine with BioPipeline2.
+
+For a fresh native installation beside BioPipeline2 on a server with PostgreSQL
+and nginx already installed, follow the [Red Hat installation guide](docs/fresh_install_linux_redhat.md).

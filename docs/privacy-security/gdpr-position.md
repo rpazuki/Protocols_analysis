@@ -90,7 +90,7 @@ This gives a real answer to an erasure request for report content, while keeping
 - Every SQL value is a bound parameter; free text is stored verbatim and never interpreted, with tests to prove it.
 - The app connects as `protocols_app`, which cannot alter the schema and holds only INSERT and SELECT on `audit_events` — audit history is append-only for the application, while a DBA can still perform agreed retention pruning or an erasure request.
 - PostgreSQL publishes no ports in production; only the app container reaches it.
-- No secrets in source control: `.env` is git-ignored, `.env.example` documents the variables, and production reads `/etc/protocols/app.env`.
+- No secrets in source control: `.env` is git-ignored, `.env.example` documents the variables, and production reads `/etc/protocols-analysis/app.env`.
 - Exports carry an on-screen warning that they contain raw email addresses, and every export is audited.
 
 ### Audit coverage
