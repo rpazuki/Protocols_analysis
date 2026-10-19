@@ -53,6 +53,12 @@ test('local login works in a real production build', { timeout: 60000 }, async (
     await waitForServer(`${base}/protocols/api/health`, server, () => logs);
     const health = await (await fetch(`${base}/protocols/api/health`)).json();
     assert.equal(health.authAdapter, 'local');
+    const anonymous = await fetch(`${base}/protocols/reports`, { redirect: 'manual' });
+    assert.equal(anonymous.status, 307);
+    const signInLocation = new URL(anonymous.headers.get('location')!, publicBase);
+    assert.equal(signInLocation.pathname, '/protocols/auth/signin');
+    assert.ok(!signInLocation.pathname.includes('/protocols/protocols/'));
+
 
     async function login(value: string, origin = publicBase, returnTo = '/reports') {
       const page = await fetch(`${base}/protocols/auth/local`);
@@ -84,6 +90,79 @@ test('local login works in a real production build', { timeout: 60000 }, async (
     const headers = { cookie: cookie.split(';')[0]! };
     const authenticated = await fetch(`${base}/protocols/auth/local`, { headers, redirect: 'manual' });
     assert.equal(authenticated.status, 307);
+    assert.equal(authenticated.headers.get('location'), `${publicBase}/protocols/reports`);
+
+    const protectedPage = await fetch(`${base}/protocols/reports`, { headers, redirect: 'manual' });
+    assert.equal(protectedPage.status, 307);
+    const agreementLocation = new URL(protectedPage.headers.get('location')!, publicBase);
+    assert.equal(agreementLocation.pathname, '/protocols/agreement');
+    const agreementPage = await fetch(`${base}${agreementLocation.pathname}${agreementLocation.search}`, { headers });
+    assert.equal(agreementPage.status, 200);
+    const agreementHtml = await agreementPage.text();
+    assert.ok(!agreementHtml.match(/patient-identifiable|participant-identifiable/));
+    // Submit only the disposable test account's acknowledgement, exercising the real action redirect.
+    function actionFormData(html: string): FormData {
+      const body = new FormData();
+      const decode = (value: string) => value.replace(/&quot;/g, '"').replace(/&#x27;|&#39;/g, "'")
+        .replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&');
+      for (const input of html.matchAll(/<input\b[^>]*>/g)) {
+        const attrs = Object.fromEntries([...input[0].matchAll(/([a-zA-Z-]+)="([^"]*)"/g)]
+          .map(match => [match[1]!, decode(match[2]!)]));
+        if (attrs.type === 'hidden' && attrs.name) body.append(attrs.name, attrs.value ?? '');
+      }
+      return body;
+    }
+    const agreementBody = actionFormData(agreementHtml);
+    agreementBody.set('accept', 'yes');
+    agreementBody.set('returnTo', '/protocols/reports');
+    const accepted = await fetch(`${base}/protocols/agreement`, {
+      method: 'POST', body: agreementBody, headers: { ...headers, origin: publicBase }, redirect: 'manual',
+    });
+    assert.equal(accepted.status, 303);
+    assert.equal(accepted.headers.get('location'), `${publicBase}/protocols/reports`);
+    for (const route of ['/reports', '/reports/new', '/reports/recycle-bin',
+      '/admin/reports', '/admin/recycle-bin', '/admin/protocol-types', '/admin/admins', '/admin/access', '/admin/audit', '/admin/export']) {
+      const page = await fetch(`${base}/protocols${route}`, { headers, redirect: 'manual' });
+      const html = await page.text();
+      assert.equal(page.status, 200, `${route}: ${html.slice(0, 300)}`);
+      assert.ok(!html.includes('<h1>Not found</h1>'), route);
+      assert.ok(!html.match(/patient-identifiable|participant-identifiable/), route);
+    }
+    const newReportPage = await fetch(`${base}/protocols/reports/new`, { headers });
+    const reportBody = actionFormData(await newReportPage.text());
+    const fields = {
+      reportDate: '2026-08-30', protocolTypeId: '11111111-1111-1111-1111-111111111111',
+      protocolName: 'Production routing test', descriptionText: 'Synthetic biology procedure test.',
+      outcome: 'success', outcomeHypothesis: 'Expected experimental result.',
+    };
+    for (const [key, value] of Object.entries(fields)) reportBody.set(key, value);
+    const created = await fetch(`${base}/protocols/reports/new`, {
+      method: 'POST', body: reportBody, headers: { ...headers, origin: publicBase }, redirect: 'manual',
+    });
+    assert.equal(created.status, 303);
+    const createdUrl = new URL(created.headers.get('location')!, publicBase);
+    assert.match(createdUrl.pathname, /^\/protocols\/reports\/[a-f0-9-]+$/);
+    assert.equal(createdUrl.searchParams.get('created'), '1');
+    const detail = await fetch(`${base}${createdUrl.pathname}`, { headers });
+    assert.equal(detail.status, 200);
+    assert.ok((await detail.text()).includes('Production routing test'));
+
+    const editPage = await fetch(`${base}${createdUrl.pathname}/edit`, { headers });
+    assert.equal(editPage.status, 200);
+    const editBody = actionFormData(await editPage.text());
+    for (const [key, value] of Object.entries(fields)) editBody.set(key, value);
+    editBody.set('descriptionText', 'Updated synthetic biology procedure test.');
+    const edited = await fetch(`${base}${createdUrl.pathname}/edit`, {
+      method: 'POST', body: editBody, headers: { ...headers, origin: publicBase }, redirect: 'manual',
+    });
+    assert.equal(edited.status, 303);
+    assert.equal(edited.headers.get('location'), `${publicBase}${createdUrl.pathname}?updated=1`);
+
+    const home = await fetch(`${base}/protocols`, { headers, redirect: 'manual' });
+    assert.equal(home.headers.get('location'), `${publicBase}/protocols/reports/new`);
+    const adminIndex = await fetch(`${base}/protocols/admin`, { headers, redirect: 'manual' });
+    assert.equal(adminIndex.headers.get('location'), `${publicBase}/protocols/admin/reports`);
+
     assert.equal((await fetch(`${base}/protocols/auth/mock`)).status, 404);
     assert.equal((await fetch(`${base}/protocols/auth/callback`)).status, 404);
 

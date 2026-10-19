@@ -6,7 +6,6 @@ import { createSession, safeReturnTo } from '../../../server/auth/session.ts';
 import { getPrincipalSafe } from '../../../server/auth/principal.ts';
 import { auditBestEffort } from '../../../server/audit.ts';
 import { appUrl } from '../../../server/urls.ts';
-import { appBasePath } from '../../../lib/paths.ts';
 import { SubmitButton } from '../../../components/SubmitButton.tsx';
 import { Notice } from '../../../components/Notice.tsx';
 
@@ -16,7 +15,7 @@ export default async function LocalSignInPage({ searchParams }: {
   if (config.adapterId !== 'local') notFound();
   const params = await searchParams;
   const returnTo = safeReturnTo(params.returnTo);
-  if (await getPrincipalSafe()) redirect(returnTo);
+  if (await getPrincipalSafe()) redirect(appUrl(returnTo));
 
   async function signIn(form: FormData) {
     'use server';
@@ -45,9 +44,7 @@ export default async function LocalSignInPage({ searchParams }: {
       url.searchParams.set('error', 'Sign-in failed. Check your email and password, or contact the administrator.');
       redirect(url.toString());
     }
-    const path = appBasePath && target.startsWith(`${appBasePath}/`)
-      ? target.slice(appBasePath.length) : target;
-    redirect(appUrl(path));
+    redirect(appUrl(target));
   }
 
   return (

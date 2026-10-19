@@ -8,7 +8,7 @@ import { auditRequired } from '../audit.ts';
 import { requireSignedIn } from '../auth/principal.ts';
 import { safeReturnTo } from '../auth/session.ts';
 import { errorState, toFormState, type FormState } from './form-state.ts';
-import { appPath } from '../../lib/paths.ts';
+import { appUrl } from '../urls.ts';
 
 /**
  * Records first-access acceptance of the privacy and use agreement.
@@ -49,5 +49,5 @@ export async function acceptAgreementAction(_prev: FormState, formData: FormData
     return toFormState(err);
   }
 
-  redirect(appPath(returnTo));
+  redirect(appUrl(returnTo));
 }

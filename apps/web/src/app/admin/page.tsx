@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation';
-import { appPath } from '../../lib/paths.ts';
+import { appUrl } from '../../server/urls.ts';
 
 export default function AdminIndexPage() {
-  redirect(appPath('/admin/reports'));
+  redirect(appUrl('/admin/reports'));
 }

@@ -1,4 +1,5 @@
 import { redirect } from 'next/navigation';
+import { appUrl } from '../../../server/urls.ts';
 import { config } from '../../../server/config.ts';
 import { getAuthAdapter } from '../../../server/auth/adapter.ts';
 import { getPrincipalSafe } from '../../../server/auth/principal.ts';
@@ -15,7 +16,7 @@ export default async function SignInPage({
   const returnTo = safeReturnTo(params.returnTo);
 
   const principal = await getPrincipalSafe();
-  if (principal) redirect(returnTo);
+  if (principal) redirect(appUrl(returnTo));
 
   const adapter = getAuthAdapter();
 

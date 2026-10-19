@@ -31,7 +31,6 @@ This file is the canonical product overview for goals, audiences, roles, workflo
 ## Non-Goals For First Release
 
 - Multi-lab tenancy.
-- Patient or participant data collection.
 - File attachments.
 - A public website.
 - App-owned password accounts.
@@ -122,7 +121,7 @@ The first-access agreement should explain:
 
 - the app stores the authenticated Imperial email address as the user's username;
 - the email address is attached to protocol reports, audit events, admin changes, and exports where relevant;
-- protocol descriptions and hypotheses should not contain patient-identifiable, participant-identifiable, or unrelated personal data;
+- protocol descriptions and hypotheses describe synthetic biology wet-lab procedures and experimental outcomes;
 - admins can view and export reports across the lab;
 - exports currently include raw email addresses;
 - recycle-bin records can be restored or permanently deleted according to the app workflow;

@@ -1,4 +1,5 @@
 import { notFound, redirect } from 'next/navigation';
+import { appUrl } from '../../../server/urls.ts';
 import { DEFAULT_MOCK_PERSONAS, MockAuthAdapter } from '@protocols/auth-mock';
 import { config, isProduction } from '../../../server/config.ts';
 import { getAuthAdapter } from '../../../server/auth/adapter.ts';
@@ -50,7 +51,7 @@ export default async function MockSignInPage({
       metadata: { adapter: 'mock' },
     });
 
-    redirect(target);
+    redirect(appUrl(target));
   }
 
   return (

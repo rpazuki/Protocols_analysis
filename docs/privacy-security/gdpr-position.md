@@ -20,16 +20,16 @@ That does not mean the app cannot store email addresses. It means the project ne
 ## Likely Data Categories
 
 - Researcher email address: personal data.
-- Protocol report text: may contain personal data if researchers type names, sample identifiers linked to people, patient information, collaborator names, or other identifiers.
+- Protocol report text: may contain personal data if researchers type researcher names, collaborator names, or other personal identifiers unrelated to the experiment.
 - Outcome and hypothesis text: may contain personal data depending on what researchers type.
 - Admin action logs: personal data where they identify the acting admin.
 - Authentication tokens/session data: security-sensitive operational data.
 
-An Imperial email address is not normally special category data by itself. However, free-text protocol fields could accidentally include special category data, especially health/genetic/patient-related details. The UI and policy should instruct users not to enter patient-identifiable or unnecessary personal data.
+This application records synthetic biology wet-lab procedures and experimental outcomes. Researcher email addresses and attribution are personal data; avoid collecting unrelated personal information in report text.
 
 ## Product Requirements From This
 
-- Add visible but concise privacy/help text near long text fields: avoid patient-identifiable, participant-identifiable, or unrelated personal data.
+- Add concise help text describing wet-lab procedures, experimental changes and outcome hypotheses.
 - Require first-access acceptance of a privacy and use agreement before the user can create reports or use admin features.
 - Treat the first-access agreement as an acknowledgement/privacy-and-use agreement unless Imperial reviewers explicitly decide UK GDPR consent is the correct lawful basis.
 - Include admin export warnings because exports contain raw email addresses.
@@ -73,7 +73,7 @@ Agreement acceptances record only the email address, the version, the timestamp,
 
 The first-access agreement is a gate: every authenticated page and action routes to it until the current version has been accepted. It is worded as an acknowledgement rather than as UK GDPR consent, per the note above. The text lives in `packages/domain/src/agreement.ts` behind `AGREEMENT_VERSION`; changing the wording and bumping the version re-prompts every user.
 
-The report form carries inline guidance not to enter patient-identifiable, participant-identifiable, or unrelated personal data, next to both free-text fields, and the same warning appears in the page footer.
+The report form describes what to enter about wet-lab procedures and outcome hypotheses. The footer identifies the synthetic biology scope. The agreement still explains researcher attribution and access to report data.
 
 ### Deletion
 

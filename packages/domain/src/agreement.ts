@@ -10,7 +10,7 @@
  * Bump AGREEMENT_VERSION whenever the wording changes materially. Users are
  * re-prompted for any version they have not accepted.
  */
-export const AGREEMENT_VERSION = '2026-10-18.1';
+export const AGREEMENT_VERSION = '2026-10-19.1';
 
 export interface AgreementSection {
   heading: string;
@@ -34,7 +34,6 @@ export const AGREEMENT_SECTIONS: AgreementSection[] = [
   {
     heading: 'What you should not type into reports',
     points: [
-      'Do not enter patient-identifiable or participant-identifiable information.',
       'Do not enter personal data about other people that is not needed for the protocol record.',
       'Protocol descriptions and hypotheses are free text and are read by lab admins and by later analysis.',
     ],

@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { appPath } from '../../lib/paths.ts';
+import { appUrl } from '../urls.ts';
 import { protocolTypesRepo, reportsRepo, withTransaction } from '@protocols/db';
 import {
   DomainError,
@@ -109,7 +110,7 @@ export async function createReportAction(_prev: FormState, formData: FormData): 
   }
 
   revalidatePath('/reports');
-  redirect(appPath(`/reports/${newId}?created=1`));
+  redirect(appUrl(`/reports/${newId}?created=1`));
 }
 
 export async function updateReportAction(_prev: FormState, formData: FormData): Promise<FormState> {
@@ -165,7 +166,7 @@ export async function updateReportAction(_prev: FormState, formData: FormData): 
 
   revalidatePath('/reports');
   revalidatePath(`/reports/${id}`);
-  redirect(appPath(`/reports/${id}?updated=1`));
+  redirect(appUrl(`/reports/${id}?updated=1`));
 }
 
 export async function recycleReportAction(_prev: FormState, formData: FormData): Promise<FormState> {

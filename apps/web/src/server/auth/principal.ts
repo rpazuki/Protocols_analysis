@@ -5,7 +5,7 @@ import { DomainError, ForbiddenError, type Principal } from '@protocols/domain';
 import { config } from '../config.ts';
 import { auditBestEffort } from '../audit.ts';
 import { readSession } from './session.ts';
-import { appPath } from '../../lib/paths.ts';
+import { appUrl } from '../urls.ts';
 
 /**
  * Resolves the current request's principal.
@@ -102,7 +102,7 @@ async function getPrincipalOrRedirect(): Promise<Principal | null> {
   try {
     return await getPrincipal();
   } catch (err) {
-    if (err instanceof AccessDeniedError) redirect(appPath('/access-denied'));
+    if (err instanceof AccessDeniedError) redirect(appUrl('/access-denied'));
     throw err;
   }
 }
@@ -114,13 +114,13 @@ async function getPrincipalOrRedirect(): Promise<Principal | null> {
 export async function requirePrincipal(returnTo?: string): Promise<Principal> {
   const principal = await getPrincipalOrRedirect();
   if (!principal) {
-    const target = returnTo ? appPath(`/auth/signin?returnTo=${encodeURIComponent(returnTo)}`) : appPath('/auth/signin');
+    const target = returnTo ? appUrl(`/auth/signin?returnTo=${encodeURIComponent(returnTo)}`) : appUrl('/auth/signin');
     redirect(target);
   }
 
   const accepted = await agreementsRepo.hasAcceptedCurrentAgreement(principal.email);
   if (!accepted) {
-    const target = returnTo ? appPath(`/agreement?returnTo=${encodeURIComponent(returnTo)}`) : appPath('/agreement');
+    const target = returnTo ? appUrl(`/agreement?returnTo=${encodeURIComponent(returnTo)}`) : appUrl('/agreement');
     redirect(target);
   }
 
@@ -131,7 +131,7 @@ export async function requirePrincipal(returnTo?: string): Promise<Principal> {
 export async function requireSignedIn(returnTo?: string): Promise<Principal> {
   const principal = await getPrincipalOrRedirect();
   if (!principal) {
-    const target = returnTo ? appPath(`/auth/signin?returnTo=${encodeURIComponent(returnTo)}`) : appPath('/auth/signin');
+    const target = returnTo ? appUrl(`/auth/signin?returnTo=${encodeURIComponent(returnTo)}`) : appUrl('/auth/signin');
     redirect(target);
   }
   return principal;
@@ -153,7 +153,7 @@ export async function requireAdmin(returnTo?: string): Promise<Principal> {
       targetType: 'session',
       metadata: { reason: 'not_admin', path: returnTo ?? null },
     });
-    redirect(appPath(`/no-access?from=${encodeURIComponent(returnTo ?? '')}`));
+    redirect(appUrl(`/no-access?from=${encodeURIComponent(returnTo ?? '')}`));
   }
   return principal;
 }

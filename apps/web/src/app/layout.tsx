@@ -35,8 +35,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
 
         <footer className="site-footer">
           <p>
-            {config.appName} - internal lab use only. Do not enter patient-identifiable or
-            participant-identifiable information.
+            {config.appName} - synthetic biology wet-lab protocols and experimental outcomes.
           </p>
         </footer>
       </body>

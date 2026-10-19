@@ -161,8 +161,7 @@ export function ReportForm({
           aria-describedby="descriptionText-hint"
         />
         <span className="hint" id="descriptionText-hint">
-          Describe what you changed and how you ran it. Length is unrestricted. Do not enter
-          patient-identifiable, participant-identifiable, or unrelated personal data.
+          Describe the wet-lab procedure, what you changed, and how you ran it. Length is unrestricted.
         </span>
         {state.fieldErrors.descriptionText ? (
           <span className="error">{state.fieldErrors.descriptionText}</span>
@@ -205,8 +204,7 @@ export function ReportForm({
           aria-describedby="outcomeHypothesis-hint"
         />
         <span className="hint" id="outcomeHypothesis-hint">
-          What you think went right or wrong, and why. Same rule: no patient-identifiable or
-          unrelated personal data.
+          Explain what you think went right or wrong in the experiment, and why.
         </span>
       </div>
 

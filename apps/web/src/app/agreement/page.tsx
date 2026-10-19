@@ -1,4 +1,5 @@
 import { redirect } from 'next/navigation';
+import { appUrl } from '../../server/urls.ts';
 import { agreementsRepo } from '@protocols/db';
 import {
   AGREEMENT_INTRO,
@@ -24,7 +25,7 @@ export default async function AgreementPage({
 
   const principal = await requireSignedIn('/agreement');
   const alreadyAccepted = await agreementsRepo.hasAcceptedCurrentAgreement(principal.email);
-  if (alreadyAccepted) redirect(returnTo);
+  if (alreadyAccepted) redirect(appUrl(returnTo));
 
   return (
     <>

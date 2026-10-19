@@ -4,6 +4,10 @@ export const appBasePath = configuredBasePath === '/' ? '' : `/${configuredBaseP
 
 export function appPath(path = '/'): string {
   const suffix = path.startsWith('/') ? path : `/${path}`;
+  // Callers may already carry the public prefix (for example a returnTo URL).
+  // Add it at most once, without confusing /protocols-other with /protocols.
+  if (appBasePath && (suffix === appBasePath || suffix.startsWith(`${appBasePath}/`)
+      || suffix.startsWith(`${appBasePath}?`) || suffix.startsWith(`${appBasePath}#`))) return suffix;
   if (suffix === '/') return appBasePath || '/';
   return `${appBasePath}${suffix}`;
 }

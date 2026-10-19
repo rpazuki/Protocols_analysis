@@ -55,7 +55,7 @@ export class MockAuthAdapter implements AuthAdapter {
 
   async startLogin(params: { returnTo: string; callbackUrl: string }): Promise<StartLoginResult> {
     // Send the browser to the in-app persona picker rather than to an IdP.
-    const url = new URL('/auth/mock', params.callbackUrl);
+    const url = new URL('./mock', params.callbackUrl);
     url.searchParams.set('returnTo', params.returnTo);
     return { redirectUrl: url.toString(), transaction: { returnTo: params.returnTo } };
   }

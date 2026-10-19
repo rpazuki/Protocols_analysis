@@ -244,7 +244,8 @@ sudo -u protocols env NODE_ENV=production NEXT_PHASE=phase-production-build \
     npm run build --workspace apps/web
 
 sudo -u protocols mkdir -p apps/web/.next/standalone/apps/web/.next
-sudo -u protocols cp -a apps/web/.next/static apps/web/.next/standalone/apps/web/.next/
+sudo -u protocols mkdir -p apps/web/.next/standalone/apps/web/.next/static
+sudo -u protocols cp -a apps/web/.next/static/. apps/web/.next/standalone/apps/web/.next/static/
 if [ -d apps/web/public ]; then
     sudo -u protocols cp -a apps/web/public apps/web/.next/standalone/apps/web/
 fi
@@ -459,3 +460,38 @@ site. Do not restart BioPipeline or change its database for a Protocols update.
 
 For details of local authentication, session invalidation and switching back to
 SSO later, see [local-authentication.md](admin-ops/local-authentication.md).
+
+## Fixing repeated “Not found” pages under /protocols
+
+An older revision passed already-prefixed relative paths to Next.js redirects.
+Next added its configured base path again, producing `/protocols/protocols/...`
+and a 404. The corrected revision uses same-origin absolute redirect URLs and
+adds the base path exactly once, including after login, agreement acceptance,
+report creation/editing and admin redirects.
+
+After the correction is committed and pushed, deploy it from the repository:
+
+```bash
+cd /opt/protocols-analysis
+sudo -u protocols git status --short
+# Stop here and reconcile local edits before pulling if any are listed.
+sudo -u protocols git pull --ff-only
+sudo systemctl stop protocols-analysis
+sudo -u protocols npm ci
+sudo -u protocols env NODE_ENV=production NEXT_PHASE=phase-production-build \
+    NEXT_TELEMETRY_DISABLED=1 APP_BASE_PATH=/protocols NEXT_PUBLIC_BASE_PATH=/protocols \
+    npm run build --workspace apps/web
+sudo -u protocols mkdir -p apps/web/.next/standalone/apps/web/.next/static
+sudo -u protocols cp -a apps/web/.next/static/. apps/web/.next/standalone/apps/web/.next/static/
+if [ -d apps/web/public ]; then
+    sudo -u protocols cp -a apps/web/public apps/web/.next/standalone/apps/web/
+fi
+sudo systemctl start protocols-analysis
+```
+
+Stop on any build/copy failure rather than restarting an incomplete build. This
+fix needs no database schema migration or nginx change. The privacy acknowledgement
+version changes to reflect the synthetic biology wording, so users acknowledge
+the updated text at next access. Open the clean URL
+`https://rlalab-assist.dept.ic.ac.uk:8444/protocols/auth/signin`, rather than an
+old bookmarked URL containing `/protocols/protocols/`.
