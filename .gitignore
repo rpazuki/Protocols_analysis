@@ -9,6 +9,9 @@
 adminPass
 *Pass
 *password*
+# This is application source, not a runtime password file.
+!apps/web/src/app/auth/change-password/
+!apps/web/src/app/auth/change-password/page.tsx
 *credentials*
 *.p12
 *.pfx
