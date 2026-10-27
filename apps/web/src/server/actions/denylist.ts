@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { adminsRepo, denylistRepo, withTransaction } from '@protocols/db';
 import { assertDeniable, denylistAddSchema, denylistRemoveSchema } from '@protocols/domain';
+import { config } from '../config.ts';
 import { auditRequired } from '../audit.ts';
 import { requireAdminForAction } from '../auth/principal.ts';
 import { successState, toFormState, type FormState } from './form-state.ts';
@@ -25,6 +26,7 @@ export async function denyAccessAction(_prev: FormState, formData: FormData): Pr
     const entry = await withTransaction(async (client) => {
       // Read the admin list inside the transaction so the guard cannot be
       // raced by a concurrent admin removal.
+      if (config.adapterId === 'local') await client.query('SELECT pg_advisory_xact_lock(7281946501)');
       const activeAdmins = await adminsRepo.listActiveAdminEmails(client);
       assertDeniable({ target: email, actor: principal.email, activeAdmins });
 

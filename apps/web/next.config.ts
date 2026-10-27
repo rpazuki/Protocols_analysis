@@ -103,7 +103,7 @@ const config: NextConfig = {
       },
       {
         // Report pages and exports must never be cached by an intermediary.
-        source: '/(reports|admin)/:path*',
+        source: '/(reports|admin|auth)/:path*',
         headers: [{ key: 'Cache-Control', value: 'no-store, must-revalidate' }],
       },
     ];

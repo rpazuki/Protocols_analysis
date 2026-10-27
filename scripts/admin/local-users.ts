@@ -36,19 +36,20 @@ function passwordPrompt(label: string): Promise<string> {
 
 async function main() {
   const [command, email] = process.argv.slice(2);
-  if (!['create', 'reset', 'disable'].includes(command ?? '') || !email) {
-    throw new Error('Usage: npm run local-users -- <create|reset|disable> <email>');
+  if (!['create', 'reset', 'disable', 'reactivate'].includes(command ?? '') || !email) {
+    throw new Error('Usage: npm run local-users -- <create|reset|disable|reactivate> <email>');
   }
   let password = '';
-  if (command !== 'disable') {
+  if (command === 'create' || command === 'reset') {
     password = await passwordPrompt('Password (12–1024 characters): ');
     if (password !== await passwordPrompt('Confirm password: ')) throw new Error('Passwords do not match.');
   }
   await withTransaction(async client => {
     if (command === 'disable') await localAuthRepo.disable(email, client);
-    else await localAuthRepo.setPassword(email, password, command === 'create', client);
+    else if (command === 'reactivate') await localAuthRepo.reactivate(email, client);
+    else await localAuthRepo.setPassword(email, password, command === 'create', client, true);
     await auditRepo.recordAuditEvent({ actorEmail: 'cli@localhost',
-      action: command === 'create' ? 'local-account.create' : command === 'reset' ? 'local-account.reset' : 'local-account.disable',
+      action: command === 'create' ? 'local-account.create' : command === 'reset' ? 'local-account.reset' : command === 'reactivate' ? 'local-account.reactivate' : 'local-account.disable',
       targetType: 'local_account', targetId: email.toLowerCase().trim(), metadata: { via: 'cli' } }, client);
   });
   console.log(`Local account ${command} completed. Admin rights are managed separately.`);

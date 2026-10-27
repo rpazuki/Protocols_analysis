@@ -75,7 +75,7 @@ Confirm this revision contains local login, then install dependencies:
 
 ```bash
 cd /opt/protocols-analysis
-test -f db/migrations/0005_local_accounts.sql
+test -f db/migrations/0006_local_user_administration.sql
 test -f scripts/admin/local-users.ts
 sudo -u protocols npm ci
 ```
@@ -205,7 +205,7 @@ sudo systemd-run --wait --pipe --collect --uid=protocols \
 ```
 
 Continue only after migration succeeds. It must include
-`0005_local_accounts.sql`. Verify the table through the owner connection if needed:
+`0005_local_accounts.sql` and `0006_local_user_administration.sql`. Verify the table through the owner connection if needed:
 
 ```bash
 psql -h 127.0.0.1 -U protocols_owner -d protocols_analysis -W \
@@ -224,7 +224,8 @@ sudo systemd-run --wait --pty --collect --uid=protocols \
 ```
 
 Enter and confirm a password of 12–1024 characters. There are no default login
-credentials and no email is sent. Administrator status comes from the configured
+credentials and no email is sent. This initial password must be changed at first login.
+Administrator status comes from the configured
 admin list; creating a local account by itself does not grant admin rights.
 
 ## 6. Build the production frontend
@@ -422,8 +423,8 @@ From your computer, open:
 https://rlalab-assist.dept.ic.ac.uk:8444/protocols/auth/signin
 ```
 
-Choose local email/password login, use the account created in section 5, accept
-the privacy acknowledgement, and verify report creation. Test a second local
+Choose local email/password login, use the account created in section 5, change
+the initial password, then accept the privacy acknowledgement, and verify report creation. Test a second local
 account as a researcher. TLS trust failures require a trusted certificate or the
 agreed ICT access/trust configuration; a successful `curl -k` test alone does
 not establish browser trust.
@@ -434,8 +435,9 @@ the wrong application.
 
 ## 10. More accounts and password resets
 
-Use the owner environment and an interactive terminal. Change the operation to
-`create`, `reset` or `disable` as required:
+Use **Users** in the app for normal account administration. For owner-only recovery,
+use the owner environment and an interactive terminal. Change the operation to
+`create`, `reset`, `disable` or `reactivate` as required:
 
 ```bash
 sudo systemd-run --wait --pty --collect --uid=protocols \
@@ -446,8 +448,9 @@ sudo systemd-run --wait --pty --collect --uid=protocols \
 ```
 
 Reset invalidates old sessions; disable rejects login and existing sessions.
-There is currently no self-service signup, invitation email or in-app password
-reset screen. Account provisioning and reset are VM-operator tasks.
+The Users page generates temporary passwords and the Change password page lets
+users replace them. There is no self-service signup or invitation/reset email.
+The owner CLI remains available if normal administrator access is lost.
 
 ## Updating later
 
@@ -478,6 +481,10 @@ sudo -u protocols git status --short
 sudo -u protocols git pull --ff-only
 sudo systemctl stop protocols-analysis
 sudo -u protocols npm ci
+sudo systemd-run --wait --pipe --collect --uid=protocols \
+    --property=EnvironmentFile=/etc/protocols-analysis/owner.env \
+    --working-directory=/opt/protocols-analysis \
+    /usr/bin/node --experimental-strip-types scripts/db/migrate.ts
 sudo -u protocols env NODE_ENV=production NEXT_PHASE=phase-production-build \
     NEXT_TELEMETRY_DISABLED=1 APP_BASE_PATH=/protocols NEXT_PUBLIC_BASE_PATH=/protocols \
     npm run build --workspace apps/web
@@ -490,8 +497,22 @@ sudo systemctl start protocols-analysis
 ```
 
 Stop on any build/copy failure rather than restarting an incomplete build. This
-fix needs no database schema migration or nginx change. The privacy acknowledgement
+routing change itself needs no nginx change. Current versions also include local
+account administration: apply pending database migrations as shown above. The privacy acknowledgement
 version changes to reflect the synthetic biology wording, so users acknowledge
 the updated text at next access. Open the clean URL
 `https://rlalab-assist.dept.ic.ac.uk:8444/protocols/auth/signin`, rather than an
 old bookmarked URL containing `/protocols/protocols/`.
+
+## Local user administration
+
+After the first administrator signs in, use **Users** to create accounts, reset
+passwords, disable/reactivate users and manage roles. Deliver each generated temporary
+password securely; the user must change it on first login before accessing reports.
+Use **Change password** for your own password. No email service is required.
+
+When updating from a version before this feature, apply migration
+`0006_local_user_administration.sql` using the owner environment before restarting
+the new build. Existing accounts/reports are retained and no new environment settings
+are needed. Keep `DATABASE_URL` in the running service set to the app-role URL.
+See [local authentication](admin-ops/local-authentication.md) for safeguards and recovery.

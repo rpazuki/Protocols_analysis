@@ -84,3 +84,11 @@ node scripts/admin/admin-cli.ts access list
 node scripts/admin/admin-cli.ts access block name@ic.ac.uk --reason="Left the lab"
 node scripts/admin/admin-cli.ts access unblock name@ic.ac.uk
 ```
+
+## Local login mode
+
+With `AUTH_ADAPTER=local`, use **Users** for account creation and password resets.
+Adding an admin requires an active local account; the last active local admin is
+protected even if disabled or SSO-only addresses remain in the allowlist.
+[Local account administration](local-authentication.md) describes temporary
+passwords, first-login changes, deactivation and recovery.

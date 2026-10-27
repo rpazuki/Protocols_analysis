@@ -218,6 +218,7 @@ h3 { font-size: 1rem; margin: 1.25rem 0 0.5rem; }
 .field input[type='text'],
 .field input[type='date'],
 .field input[type='email'],
+.field input[type='password'],
 .field input[type='search'],
 .field input[type='number'],
 .field select,
@@ -357,4 +358,13 @@ td .cell-secondary { color: var(--text-muted); font-size: 0.8125rem; }
   overflow: hidden;
   clip: rect(0 0 0 0);
   white-space: nowrap;
+}
+
+/* Account controls and the expanded admin navigation also fit narrow windows. */
+@media (max-width: 48rem) {
+  .site-header__inner { gap: 0.75rem; }
+  .site-nav { flex-basis: 100%; }
+  .site-nav a { white-space: nowrap; }
+  .identity { flex-wrap: wrap; min-width: 0; }
+  .identity__email { overflow-wrap: anywhere; max-width: 100%; }
 }

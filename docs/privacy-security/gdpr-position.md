@@ -113,9 +113,11 @@ These are decisions, not code, and none of them is silently pre-empted by the im
 
 When `AUTH_ADAPTER=local`, `local_accounts` additionally stores normalized email,
 a salted scrypt password hash, credential revision, active status, failed-login
-count, lockout time, and account/login timestamps. Plaintext passwords are not
-stored or audited. Only VM operators with the owner database credential can
-provision/reset accounts; the runtime database role can read hashes and update
-login counters, but cannot replace passwords. Include this table in protected
+count, lockout time, required-password-change status, and account/login timestamps.
+Plaintext passwords are not stored in the database or audited. Administrators can
+provision/reset accounts through the Users page; generated temporary passwords
+are returned once to the acting admin for secure delivery. The runtime role uses
+narrow, audited database functions for credential changes and cannot directly
+insert accounts or update password hashes. Owner-only CLI recovery remains available. Include this table in protected
 database backups and privacy/retention review. SSO-only deployments need no
 local accounts.

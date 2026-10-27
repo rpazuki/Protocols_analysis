@@ -10,7 +10,11 @@ import { APP_VERSION, config } from '../../../server/config.ts';
  */
 export async function GET(): Promise<NextResponse> {
   try {
-    await query('SELECT 1');
+    // Local login needs migration 0006; a reachable but outdated database is
+    // not ready to serve sessions or user administration.
+    await query(config.adapterId === 'local'
+      ? 'SELECT must_change_password FROM local_accounts LIMIT 0'
+      : 'SELECT 1');
     return NextResponse.json(
       { status: 'ok', version: APP_VERSION, authAdapter: config.adapterId },
       { headers: { 'cache-control': 'no-store' } },

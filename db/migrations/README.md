@@ -20,3 +20,5 @@ Rules:
 | `0003_researcher_denylist.sql` | the researcher access denylist and its grant |
 | `0004_denylist_from_config.sql` | explicit `from_config` marker, so a block dropped from config can be managed in the app |
 | `0005_local_accounts.sql` | optional salted password accounts, lockout state and session credential revisions; owner-only provisioning |
+
+| `0006_local_user_administration.sql` | first-login password changes and narrowly scoped, audited local account administration/password-change functions |

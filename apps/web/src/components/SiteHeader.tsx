@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import type { Principal } from '@protocols/domain';
 import { NavLink } from './NavLink.tsx';
+import { config } from '../server/config.ts';
 import { appPath } from '../lib/paths.ts';
 
 /**
@@ -29,6 +30,7 @@ export function SiteHeader({ principal, appName }: { principal: Principal | null
                   <NavLink href="/admin/protocol-types">Protocol types</NavLink>
                   <NavLink href="/admin/export">Export</NavLink>
                   <NavLink href="/admin/admins">Admins</NavLink>
+                  {config.adapterId === 'local' ? <NavLink href="/admin/users">Users</NavLink> : null}
                   <NavLink href="/admin/access">Access</NavLink>
                   <NavLink href="/admin/audit">Audit</NavLink>
                 </>
@@ -36,6 +38,7 @@ export function SiteHeader({ principal, appName }: { principal: Principal | null
             </nav>
 
             <div className="identity">
+              {config.adapterId === 'local' ? <Link href="/auth/change-password">Change password</Link> : null}
               {principal.isMock ? <span className="badge badge--mock">Mock user</span> : null}
               {principal.role === 'admin' ? <span className="badge badge--admin">Admin</span> : null}
               <span className="identity__email" title="Signed-in account">

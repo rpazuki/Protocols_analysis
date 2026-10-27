@@ -1,8 +1,9 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { adminsRepo, withTransaction } from '@protocols/db';
+import { adminsRepo, localAuthRepo, withTransaction } from '@protocols/db';
 import { adminAddSchema, adminRemoveSchema } from '@protocols/domain';
+import { readSession } from '../auth/session.ts';
 import { config } from '../config.ts';
 import { auditRequired } from '../audit.ts';
 import { requireAdminForAction } from '../auth/principal.ts';
@@ -37,6 +38,15 @@ export async function addAdminAction(_prev: FormState, formData: FormData): Prom
       }
     }
 
+    if (config.adapterId === 'local') {
+      const session = await readSession();
+      if (!session?.credentialVersion) return errorState('Sign in again first.');
+      try { await localAuthRepo.manageAccount(principal.email,session.credentialVersion,email,'promote'); }
+      catch { return errorState('Could not add this admin. Create and activate their local account in Users first.'); }
+      revalidatePath('/admin/admins'); revalidatePath('/admin/users');
+      return successState(`${email} can now administer this app.`);
+    }
+
     const entry = await withTransaction(async (client) => {
       const added = await adminsRepo.addAdmin(email, principal.email, client);
       await auditRequired(
@@ -63,6 +73,15 @@ export async function removeAdminAction(_prev: FormState, formData: FormData): P
   try {
     const principal = await requireAdminForAction();
     const { email } = adminRemoveSchema.parse({ email: String(formData.get('email') ?? '') });
+
+    if (config.adapterId === 'local') {
+      const session = await readSession();
+      if (!session?.credentialVersion) return errorState('Sign in again first.');
+      try { await localAuthRepo.manageAccount(principal.email,session.credentialVersion,email,'demote'); }
+      catch { return errorState('Could not remove this admin. The last active admin and configuration-backed admins are protected.'); }
+      revalidatePath('/admin/admins'); revalidatePath('/admin/users');
+      return successState(`${email} is no longer an admin.`);
+    }
 
     const entry = await withTransaction(async (client) => {
       const removed = await adminsRepo.removeAdmin(email, principal.email, client);

@@ -39,11 +39,11 @@ async function ensureBootstrapAdmins(): Promise<void> {
   return bootstrapPromise;
 }
 
-/**
- * Thrown when an authenticated user is on the researcher denylist. Identity is
- * proven; access is refused. Callers turn this into a redirect or a refused
- * action rather than letting it reach the generic error boundary.
- */
+/** A temporary-password session may only change its password or sign out. */
+export class PasswordChangeRequiredError extends ForbiddenError {
+  constructor() { super('Change your password before continuing.'); }
+}
+
 export class AccessDeniedError extends DomainError {
   constructor(email: string) {
     super('forbidden', 'Your access to this app has been withdrawn.', { email });
@@ -61,6 +61,7 @@ export class AccessDeniedError extends DomainError {
 export async function getPrincipal(): Promise<Principal | null> {
   const session = await readSession();
   if (!session) return null;
+  if (session.mustChangePassword) throw new PasswordChangeRequiredError();
 
   await ensureBootstrapAdmins();
 
@@ -89,7 +90,7 @@ export async function getPrincipalSafe(): Promise<Principal | null> {
   try {
     return await getPrincipal();
   } catch (err) {
-    if (err instanceof AccessDeniedError) return null;
+    if (err instanceof AccessDeniedError || err instanceof PasswordChangeRequiredError) return null;
     throw err;
   }
 }
@@ -102,6 +103,7 @@ async function getPrincipalOrRedirect(): Promise<Principal | null> {
   try {
     return await getPrincipal();
   } catch (err) {
+    if (err instanceof PasswordChangeRequiredError) redirect(appUrl('/auth/change-password'));
     if (err instanceof AccessDeniedError) redirect(appUrl('/access-denied'));
     throw err;
   }

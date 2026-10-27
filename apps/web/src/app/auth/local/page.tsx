@@ -2,7 +2,7 @@ import { notFound, redirect } from 'next/navigation';
 import { AuthError } from '@protocols/auth-core';
 import { config } from '../../../server/config.ts';
 import { getAuthAdapter } from '../../../server/auth/adapter.ts';
-import { createSession, safeReturnTo } from '../../../server/auth/session.ts';
+import { createSession, safeReturnTo, readSession } from '../../../server/auth/session.ts';
 import { getPrincipalSafe } from '../../../server/auth/principal.ts';
 import { auditBestEffort } from '../../../server/audit.ts';
 import { appUrl } from '../../../server/urls.ts';
@@ -15,6 +15,7 @@ export default async function LocalSignInPage({ searchParams }: {
   if (config.adapterId !== 'local') notFound();
   const params = await searchParams;
   const returnTo = safeReturnTo(params.returnTo);
+  if ((await readSession())?.mustChangePassword) redirect(appUrl('/auth/change-password'));
   if (await getPrincipalSafe()) redirect(appUrl(returnTo));
 
   async function signIn(form: FormData) {

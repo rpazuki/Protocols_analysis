@@ -27,6 +27,8 @@ export const AUDIT_ACTIONS = [
   'local-account.create',
   'local-account.reset',
   'local-account.disable',
+  'local-account.reactivate',
+  'local-account.password-change',
 ] as const;
 
 export type AuditAction = (typeof AUDIT_ACTIONS)[number];

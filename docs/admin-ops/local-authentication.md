@@ -60,7 +60,7 @@ independent of the application port; changing ports will not fix it.
 
 From the repository root, install dependencies (`npm ci`) for host-based
 commands. Run `npm run db:migrate` using the Protocols **owner** database URL
-before selecting local login. This applies migration `0005_local_accounts.sql`;
+before selecting local login. This applies migrations `0005_local_accounts.sql` and `0006_local_user_administration.sql`;
 existing reports, roles and SSO configuration are preserved. Existing applied
 migration files must not be edited.
 
@@ -113,7 +113,40 @@ email/password login. Verify login as both an admin and a researcher before
 using the deployment. Identity is not verified through email delivery; the
 operator must verify account ownership and communicate credentials securely.
 
-## Account operations
+## In-app account administration
+
+When `AUTH_ADAPTER=local`, administrators have a **Users** page at
+`/protocols/admin/users`. It lists and searches local email accounts, including
+active/disabled status, role, last login, and required password changes.
+
+- Create a researcher or administrator with a generated temporary password.
+- Reset another user's password; copy the new temporary password from the result.
+- Disable or reactivate accounts without changing report ownership or deleting reports.
+- Promote/demote administrators. Configuration-backed admins and the last active
+  local admin are protected. You cannot disable or reset your own account.
+
+The app does not send email. Deliver temporary passwords securely to the intended
+person. They are shown only in the operation result, never stored in plaintext,
+placed in URLs or audit metadata, or redisplayed by a subsequent page load.
+Every account/role change commits atomically with its audit event.
+
+New and reset accounts must change their temporary password before viewing
+reports, accepting the agreement or performing ordinary/admin actions. The new
+password and confirmation have separate labelled rows. After changing it, the
+user continues to the agreement if necessary. Signed-in local users can also use
+**Change password** in the header; their current password is required. Password
+changes revoke other sessions and refresh the current cookie.
+
+Disabling and password resets immediately invalidate old cookies. Reactivation
+also increments the credential version, so it cannot resurrect an old session.
+Resetting a disabled account does not reactivate it. The Access page's denylist
+remains independent; restore a block there before reactivating/promoting a user.
+Account identities stay email-based and cannot be renamed through this page.
+
+These pages and operations are unavailable under SSO. SSO role/access management
+continues through Admins and Access; password management remains with the IdP.
+
+## Account operations (owner CLI recovery)
 
 Host installation, with `DATABASE_URL` set to the owner URL:
 
@@ -121,12 +154,15 @@ Host installation, with `DATABASE_URL` set to the owner URL:
 npm run local-users -- create person@imperial.ac.uk
 npm run local-users -- reset person@imperial.ac.uk
 npm run local-users -- disable person@imperial.ac.uk
+npm run local-users -- reactivate person@imperial.ac.uk
 ```
 
 For Docker, use the owner-URL subshell above and replace the create command with
-`reset` or `disable`. Do not put passwords on the command line. Resetting a
+`reset`, `disable` or `reactivate`. Do not put passwords on the command line. Resetting a
 password increments its credential revision and invalidates old sessions;
 disabling an account immediately rejects its login and existing sessions.
+CLI creation/reset also requires a first-login password change. Reactivate restores
+the account without resetting its password or lifting the separate denylist block.
 Reset does not reactivate a disabled account. Admin role management and the
 researcher denylist remain independent and continue to apply in local mode.
 
@@ -165,3 +201,24 @@ passwords, rejection of foreign-origin submissions, Secure cookies, base-path
 redirects, password-reset session invalidation, and blocked mock/SSO callbacks
 when local login is selected. The privacy acknowledgement is versioned anew to
 cover password-hash storage, so existing users will be prompted to acknowledge it.
+
+## Upgrading an existing installation
+
+Apply migration `0006_local_user_administration.sql` as the database owner **before**
+starting the updated app. The local-mode health check returns 503 if the required schema is missing.
+Existing accounts and reports are preserved; existing users
+are not forced to change passwords merely by applying the migration. New/reset
+accounts are forced to change them. No new environment variables are required.
+
+The app must continue to use `protocols_app`, not the owner URL. Migration 0006
+grants execution of two narrow SECURITY DEFINER functions with a fixed search path;
+it does not grant INSERT or credential UPDATE on `local_accounts`. The functions
+check the active actor/session version, serialize sensitive admin operations,
+protect the last active local admin and append audit rows in the same transaction.
+Raw account-table writes, schema changes, and editing audit history remain denied.
+The original owner-only CLI remains the recovery path if no administrator can log in.
+
+For the native Red Hat installation, follow the update procedure in
+[the installation guide](../fresh_install_linux_redhat.md). Stop the app, use the
+root-only owner environment for migrations, rebuild/copy standalone assets, then
+restart and verify login. Keep owner credentials out of the app service environment.

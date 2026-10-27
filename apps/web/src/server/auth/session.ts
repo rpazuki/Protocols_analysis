@@ -20,6 +20,8 @@ export const TRANSACTION_COOKIE = 'protocols_auth_tx';
 
 export interface SessionPayload {
   email: string;
+  credentialVersion: number | null;
+  mustChangePassword: boolean;
   subject: string;
   issuer: string;
   isMock: boolean;
@@ -77,9 +79,12 @@ export async function readSession(): Promise<SessionPayload | null> {
     // honoured by a production container, even if the cookie secret leaked
     // across environments.
     if (isMock && isProduction) return null;
+    let mustChangePassword = false;
     if (payload.issuer === 'local-password') {
       if (config.adapterId !== 'local' || !Number.isSafeInteger(payload.credentialVersion)) return null;
-      if (!await localAuthRepo.isSessionCurrent(email, Number(payload.credentialVersion))) return null;
+      const state = await localAuthRepo.sessionState(email, Number(payload.credentialVersion));
+      if (!state) return null;
+      mustChangePassword = state.mustChangePassword;
     } else if (config.adapterId === 'local') {
       // Switching to local login must not accept an old SSO/mock cookie.
       return null;
@@ -87,6 +92,8 @@ export async function readSession(): Promise<SessionPayload | null> {
 
     return {
       email,
+      credentialVersion: payload.issuer === 'local-password' ? Number(payload.credentialVersion) : null,
+      mustChangePassword,
       subject: String(payload.subject ?? ''),
       issuer: String(payload.issuer ?? ''),
       isMock,
@@ -101,8 +108,8 @@ export async function readSession(): Promise<SessionPayload | null> {
 
 export async function destroySession(): Promise<void> {
   const store = await cookies();
-  store.delete(SESSION_COOKIE);
-  store.delete(TRANSACTION_COOKIE);
+  store.set(SESSION_COOKIE, '', { ...baseCookieOptions, maxAge: 0 });
+  store.set(TRANSACTION_COOKIE, '', { ...baseCookieOptions, maxAge: 0 });
 }
 
 /** Stores the short-lived OIDC/SAML sign-in transaction (state, nonce, PKCE verifier). */
@@ -120,7 +127,7 @@ export async function setAuthTransaction(transaction: Record<string, string>): P
 export async function takeAuthTransaction(): Promise<Record<string, string>> {
   const store = await cookies();
   const token = store.get(TRANSACTION_COOKIE)?.value;
-  store.delete(TRANSACTION_COOKIE);
+  store.set(TRANSACTION_COOKIE, '', { ...baseCookieOptions, maxAge: 0 });
   if (!token) return {};
   try {
     const { payload } = await jwtVerify(token, secretKey(), { algorithms: ['HS256'] });
