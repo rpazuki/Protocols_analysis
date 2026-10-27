@@ -454,12 +454,61 @@ The owner CLI remains available if normal administrator access is lost.
 
 ## Updating later
 
-Take a protected database backup first. Stop `protocols-analysis` before
-replacing the production build. Pull with `git pull --ff-only`, stopping on
-local edits/conflicts; rerun `npm ci`, apply pending migrations with the owner
-file (section 5), and rebuild/copy the frontend (section 6). Restart the service
-and repeat health/login checks. Preserve both environment files and the nginx
-site. Do not restart BioPipeline or change its database for a Protocols update.
+Use the updater after the initial installation. Take a protected database
+backup first using your normal backup procedure. The script does not create
+backups or downgrade database migrations.
+
+For the **first update that introduces the script**:
+
+```bash
+cd /opt/protocols-analysis
+sudo -u protocols git status --short
+# If any changes are listed, reconcile them before continuing.
+sudo -u protocols git pull --ff-only
+sudo bash scripts/deploy/update.sh
+```
+
+For subsequent updates, just run:
+
+```bash
+sudo bash /opt/protocols-analysis/scripts/deploy/update.sh
+```
+
+The script pulls the current branch's configured Git upstream using
+`--ff-only`, runs `npm ci --include=dev`, checks migration checksums and applies
+only pending migrations using `owner.env`, builds the standalone app, copies
+CSS/static assets and optional `public`, starts `protocols-analysis`, and polls
+its loopback health endpoint. It never sources environment files as shell code
+or passes database passwords in command arguments. No `rg` installation is
+needed. Git and npm run as `protocols`; run the updater itself as root.
+
+There is downtime while the native app is rebuilt. Even if Git is already
+up to date, the updater rebuilds and rechecks migrations: this lets you retry
+an interrupted deployment or apply environment changes. Existing migration
+files must never be edited; add new numbered SQL files instead. The script
+uses the existing migration runner; already-applied migrations are skipped.
+
+It refuses dirty/untracked checkout files and concurrent updater runs. Avoid
+manual installs/builds while it is running. If dependencies, migrations or the
+build fail after the app stops, it remains stopped; correct the reported error
+and rerun the same command. If health fails after startup, inspect
+`sudo journalctl -u protocols-analysis -n 100 --no-pager`; the script exits
+unsuccessfully and leaves the process available for diagnosis. It does not
+reset Git, automatically roll back schema changes, overwrite environment
+files, restart nginx, or change BioPipeline/Lab AI Assistant.
+
+For a different native service/user/port, use explicit options, for example:
+
+```bash
+sudo bash scripts/deploy/update.sh --user protocols --service protocols-analysis \
+    --health-url http://127.0.0.1:3200/protocols/api/health
+sudo bash scripts/deploy/update.sh --help
+```
+
+Keep `--base-path` (default `/protocols`) aligned with your runtime environment
+and nginx route. The Docker image uses the repository's default `/protocols`
+build prefix. See [Docker updates](../infra/environments/production/README.md#updates)
+only if you installed the production Compose stack instead of this native service.
 
 For details of local authentication, session invalidation and switching back to
 SSO later, see [local-authentication.md](admin-ops/local-authentication.md).

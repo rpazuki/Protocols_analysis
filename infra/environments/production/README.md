@@ -46,6 +46,49 @@ Migrations run explicitly, never automatically at boot. The runner refuses an
 already-applied migration whose contents changed. Set the `protocols_app` role's
 password out of band and use it in the app's runtime DATABASE_URL.
 
+## Updates
+
+For an **existing production Compose installation**, take a protected database
+backup, then run the updater as root from the checkout:
+
+```bash
+cd /srv/protocols/app
+# First time only, fetch the script (reconcile any local edits first):
+sudo -u protocols git status --short
+sudo -u protocols git pull --ff-only
+sudo bash scripts/deploy/update.sh --mode docker
+```
+
+On subsequent updates the last command alone pulls the current branch's
+upstream. Use `--user` if the checkout belongs to a different Linux account,
+`--app-env` for a different Compose environment file, or `--health-url` if
+`APP_HOST_PORT` is not 3200.
+
+Create `/etc/protocols-analysis/owner.env` as root, mode 0600, containing
+`DATABASE_URL` for the **database owner**, using the Compose database hostname
+`db`, and `DATABASE_SSL=false` for this internal non-TLS connection. The
+runtime `app.env` must continue to use the restricted `protocols_app` role.
+The updater loads the owner file through systemd and passes its database
+variables to a one-off migration container without putting passwords in
+command arguments. It needs Docker Compose v2, systemd, sudo, flock and curl.
+Do not run it with `bash -x`.
+
+Only `app` is built and recreated. The existing `db` container must already be
+running. The updater never pulls/recreates PostgreSQL, changes its data volume,
+or touches containers from the other projects. Compose image builds reuse
+cached layers when possible. Migration checksums are validated every time;
+only pending SQL files run. The old app stays up during the image build, then
+stops for migrations. If migration fails it stays stopped for recovery. Once
+started, the loopback health endpoint must pass before the command succeeds.
+A failed health check leaves the app available for diagnosis using
+`protocols_compose logs --tail=100 app`. After any failure, fix it and rerun;
+there is no automatic database rollback. Backups and PostgreSQL version upgrades
+remain separate operator tasks.
+
+This is an alternative to the native systemd installation; do not use Docker
+mode to update the native service described in the
+[Red Hat guide](../../../docs/fresh_install_linux_redhat.md#updating-later).
+
 ## Network shape
 
 - PostgreSQL publishes no ports; only the app container reaches it over the compose network.

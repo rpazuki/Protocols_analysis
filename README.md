@@ -149,3 +149,8 @@ The production Compose host port is configurable with `APP_HOST_PORT` (default
 
 For a fresh native installation beside BioPipeline2 on a server with PostgreSQL
 and nginx already installed, follow the [Red Hat installation guide](docs/fresh_install_linux_redhat.md).
+
+For subsequent updates, use [`scripts/deploy/update.sh`](scripts/deploy/update.sh).
+It pulls Git updates, applies pending migrations, rebuilds the app and checks
+health. See [native updates](docs/fresh_install_linux_redhat.md#updating-later)
+or [Docker updates](infra/environments/production/README.md#updates) for commands.
